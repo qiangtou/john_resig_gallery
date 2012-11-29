@@ -1,0 +1,374 @@
+<html>
+<head>
+<style type="text/css">
+body{
+font-family:Arial;
+font-size:14px;
+}
+ul.gallery{
+list-style:none;
+padding:5px;
+background:#eee;
+overflow:auto;
+border:1px solid #AAA;
+margin-top:0px;
+}
+ul.gallery li{
+float:left;
+margin:6px;
+width:110px;
+height:110px;
+background:#fff;
+border:2px solid #aaa;
+}
+
+ul.gallery img {
+width:100px;
+margin:5px;
+border:0px;
+margin-top:17px;
+}
+
+ul.gallery li.tall img {
+height:100px;
+width:auto;
+margin-top:5px;
+margin-left:17px;
+}
+
+#overlay{
+	background:#000;
+	opacity:0.5;
+	display:none;
+	position:absolute;
+	top:0px;
+	width:100%;
+	height:100%;
+	z-index:100;
+	cursor:pointer:
+	cursor:hand;
+}
+
+#gallery{
+		position:absolute;
+		width:650px;
+		height:510px;
+		background:#fff;
+		z-index:110;
+		display:none;
+}
+
+#gallery_title{
+	position:absolute;
+	bottom:5px;
+	left:5px;
+	width:100%;
+	font-siz3:16px;
+	text-aligh:center;
+}
+
+#gallery img{
+	position:absolute;
+	top:5px;
+	left:5px;
+	width:640px;
+	height:480px;
+	border:0px;
+	z-index:115;
+}
+
+#gallery.tall{
+	width:430px;
+	height:590px;
+}
+
+#gallery.tall img{
+	width:420px;
+	height:560px;
+}
+
+div.slideshow{
+	text-align:right;
+	padding:4px;
+	margin-top:10px;
+	position:relative;
+}
+
+div.slideshow span {
+	position:absolute;
+	bottom:3px;
+	left:0px;
+	font-size:18px;
+	font-weight:bold;
+}
+
+div.slideshow a {
+	color:#000;
+}
+
+</style>
+<script type="text/javascript">
+
+	function tag(name,elem){
+		return (elem||document).getElementsByTagName(name);
+	};
+	
+	function id(name){
+		return document.getElementById(name);
+	};
+	
+	function next(elem){
+		do{
+			elem=elem.nextSibling;
+		}while(elem && elem.nodeType!=1);
+		return elem
+	};
+	function prev(elem){
+		do{
+			elem=elem.prevSibling;
+		}while(elem && elem.nodeType!=1);
+		return elem
+	};
+	
+	function byClass(name,type){
+		var r=[];
+		var re=RegExp("(^|\\s)"+name+"(\\s|$)");
+		var e=document.getElementsByTagName(type||"*");
+		for(var j=0;j<e.length;j++){
+			if(re.test(e[j].className)){
+				r.push(e[j]);
+			}
+		}
+		return r;
+	};
+	
+	function getStyle(elem,name){
+		if(elem.style[name]){
+			return elem.style[name];
+		}else if(elem.currentStyle){
+			return currentStyle[name];
+		}else if(document.defaultView && document.defaultView.getComputedStyle){
+			name=name.replace(/([A-Z])/g,"-$1");
+			name=name.toLowerCase();
+			var s=document.defaultView.getComputedStyle(elem,"");
+			return s && s.getPropertyValue(name);
+		}else {
+			return null;
+		}		
+	};
+	
+	function pageHeight(){
+		return document.body.scrollHeight;
+	}
+	
+	function pageWidth(){
+		return document.body.scrollWidth;
+	}
+	
+	function hide(elem){
+		var curDisplay=getStyle(elem,'display');
+		if(durDisplay!='none'){
+			elem.$oldDisplay=curDisplay;
+		}
+		elem.style.display='none';
+	};
+	
+	function show(elem){
+		elem.style.display=elem.$oldDisplay||'';
+	}
+	
+	function setOpacity(elem,level){
+		if(elem.filters){
+			elem.style.filters='alpha(opacity='+level+')';
+		}else {
+			elem.style.opacity=level/100;
+		}
+	};
+	
+	function fadeIn(elem){
+		setOpacity(elem,0);
+		show(elem);
+		for(var i=0;i<100;i+=5){
+			(function(){
+				var pos=i;
+				setTimeout(function(){
+					setOpacity(elem,pos);
+				},(pos+1)*10);
+			})();
+		}
+	};
+	
+	function setX(elem,pos){
+		elem.style.left=pos+"px";
+	}
+	function setY(elem,pos){
+		elem.style.top=pos+"px";
+	}
+	
+	function getHeight(elem){
+		return parseInt(getStyle(elem,'height'));
+	}
+	function getWidth(elem){
+		return parseInt(getStyle(elem,'width'));
+	}
+	
+	function scrollX(){
+		var de=document.documentElement;
+		return self.pageXOffset||(de && de.scrollLeft)|| document.body.scrollLeft;
+	};
+	function scrollY(){
+		var de=document.documentElement;
+		return self.pageXOffset||(de && de.scrollTop)|| document.body.scrollTop;
+	};
+	
+	var curImage=null;
+	
+	window.onload = function () {
+		var gallery = document.createElement("div");
+		gallery.id = "gallery";
+		//加入所有的用以组织的div
+		gallery.innerHTML = '<div id="gallery_image"></div>' +
+			'<div id="gallery_prev"><a href ="">&laguo; Prev</a></div>' +
+			'<div id="gallery_next"><a href ="">Next &raguo;</a></div>' +
+			'<div id="gallery_title"></div>';
+		document.body.appendChild(gallery);
+		//支持图库内上一张和下一张点击跳转的处理器；
+		id("gallery_next").onclick = nextImage;
+		id("gallery_prev").onclick = prevImage;
+		//定位到页面上的所有图库.
+		var g = byClass("gallery", "ul");
+		for (var i = 0; i < g.length; i++) {
+			//并定位到幻灯片所有链接
+			var link = tag("a", g[i]);
+			for (var j = 0; j < link.length; j++) {
+				link[j].onclick = function() {
+					showOverlay();
+					showImage(this.parentNode);
+					return false;
+				};
+			}
+			//在图库内插入幻灯导航
+			//addSlideShow(g[i]);
+		}
+	
+	
+	//创建半透明，灰色的覆盖层
+	var overlay=document.createElement("div");
+	overlay.id="overlay";
+	overlay.onclick=hideOverlay;
+	document.body.appendChild(overlay);
+	
+	}
+	
+	function hideOverlay(){
+		curImage=null;
+		hide(id("overlay"));
+		hide(id("gallery"));
+	}
+	function showOverlay(){
+		var over=id("overlay");
+		over.style.height=pageHeight()+"px";
+		over.style.width=pageWidth()+"px";
+		fadeIn(over,50,10);
+	};
+	
+	//显示图库的当前图片
+	function showImage(cur){
+		curImage=cur;
+		var img=id("gallery_image");
+		if(img.firstChild){
+			img.removeChild(img.firstChild);
+		}
+		img.appendChild(cur.firstChild.cloneNode(true));
+		id("gallery_tile").innerHTML=cur.firstChild.firstChild.alt;
+		var gallery=id("gallery");
+		gallery.className=cur.className;
+		fadeIn(gallery,100,10);
+		adjust();
+	};
+	
+	//重定位到图库到页面的中心，就算页面经过了滚动
+	function adjust(){
+		var obj=id("gallery");
+		if(!obj)return;
+		
+		var w=getWidth(obj);
+		var h=getHeight(obj);
+		
+		var t=scrollY()+(windowHeight()/2)-(h/2);
+		if(t<0)t=0;
+		var l=scrollX()+(windowWidth()/2)-(w/2);
+		if(l<0)l=0;
+		
+		setY(obj,t);
+		setX(obj,l);
+	};
+	
+	window.onresize=document.onscroll=adjust;
+	
+	function prevImage(){
+		showImage(prev(curImage));
+		return false;
+	}
+	function nextImage(){
+		showImage(next(curImage));
+		return false;
+	}
+	
+	function addSlideShow(elem){
+		var div= document.createElement("div");
+		div.className="slideshow";
+		
+		//显示幻灯的名字，这里使用的是图库的title
+		var span =document.createElement("span");
+		span.innerHTML=elem.title;
+		div.appendChild(span);
+		
+		//创建一个链接，由此我们可以把图库所有的图片都当作幻灯中的一幕
+		var a=document.createElement("a");
+		a.href="";
+		a.innerHTML="&raquo; View as a Slideshow";
+		 //点击后开始幻灯
+		 a.onclick=function(){
+			startShow(this.parentNode.nextSibling);
+			return false;
+		 };
+		 //为页面插入新的导航和头部
+		 div.appendChild(a);
+		 elem.parentNode.insertBefore(div,elem);
+	};
+	
+	function startShow(obj){
+		var elem=tag("li",obj);
+		var gallery =id("gallery");
+		for(var i=0;i<elem.length;i++)new function(){
+			var cur =elem[i];
+			setTimeout(function(){
+				showImage(cur);
+				setTimeout(function(){
+					//fadeOut(gallery,0,10);
+				},3500);
+			},i*5000);
+		};
+		setTimeout(hideOverlay,5000*elem.length);
+		showOverlay();
+	}
+	
+		
+</script>
+
+</head>
+<body>
+<h1>Random Cat Pictures</h1>
+<p>Lorem ipsum dolor ...</p>
+<ul class="gallery" title="Random Cat Pictures">
+  <li><a href="image1.jpg"><img src="image1.jpg" alt="" /></a></li>
+  <li><a href="image2.jpg"><img src="image2.jpg" alt="" /></a></li>
+  <li ><a href="image3.jpg"><img src="image3.jpg" alt="" /></a></li>
+  <li class="tall"><a href="image4.jpg"><img src="image4.jpg" alt="" /></a></li>
+  <li class="tall"><a href="image5.jpg"><img src="image5.jpg" alt="" /></a></li>
+</ul>
+<p>Lorem ipsum dolor ...</p>
+</body>
+
+</html>
