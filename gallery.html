@@ -57,14 +57,24 @@ margin-left:17px;
 		z-index:110;
 		display:none;
 }
+#gallery_prev{
+	position:absolute;
+	bottom:5px;
+	left:5px;
+}
+
+#gallery_next{
+	position:absolute;
+	bottom:5px;
+	right:5px;
+}
 
 #gallery_title{
 	position:absolute;
 	bottom:5px;
-	left:5px;
 	width:100%;
 	font-siz3:16px;
-	text-aligh:center;
+	text-align:center;
 }
 
 #gallery img{
@@ -174,7 +184,10 @@ div.slideshow a {
 	};
 	
 	function show(elem){
-		elem.style.display=elem.$oldDisplay||'';
+		var display=getStyle(elem,'display');
+		if(display=='none'||display==''){
+			elem.style.display=elem.$oldDisplay||'block';
+		}
 	}
 	
 	function setOpacity(elem,level){
@@ -228,8 +241,8 @@ div.slideshow a {
 		gallery.id = "gallery";
 		//加入所有的用以组织的div
 		gallery.innerHTML = '<div id="gallery_image"></div>' +
-			'<div id="gallery_prev"><a href ="">&laguo; Prev</a></div>' +
-			'<div id="gallery_next"><a href ="">Next &raguo;</a></div>' +
+			'<div id="gallery_prev"><a href ="">&laquo; Prev</a></div>' +
+			'<div id="gallery_next"><a href ="">Next &raquo;</a></div>' +
 			'<div id="gallery_title"></div>';
 		document.body.appendChild(gallery);
 		//支持图库内上一张和下一张点击跳转的处理器；
@@ -280,7 +293,7 @@ div.slideshow a {
 			img.removeChild(img.firstChild);
 		}
 		img.appendChild(cur.firstChild.cloneNode(true));
-		id("gallery_tile").innerHTML=cur.firstChild.firstChild.alt;
+		id("gallery_title").innerHTML=cur.firstChild.firstChild.alt;
 		var gallery=id("gallery");
 		gallery.className=cur.className;
 		fadeIn(gallery,100,10);
@@ -295,9 +308,9 @@ div.slideshow a {
 		var w=getWidth(obj);
 		var h=getHeight(obj);
 		
-		var t=scrollY()+(windowHeight()/2)-(h/2);
+		var t=scrollY()+(pageHeight()/2)-(h/2);
 		if(t<0)t=0;
-		var l=scrollX()+(windowWidth()/2)-(w/2);
+		var l=scrollX()+(pageWidth()/2)-(w/2);
 		if(l<0)l=0;
 		
 		setY(obj,t);
@@ -362,11 +375,11 @@ div.slideshow a {
 <h1>Random Cat Pictures</h1>
 <p>Lorem ipsum dolor ...</p>
 <ul class="gallery" title="Random Cat Pictures">
-  <li><a href="image1.jpg"><img src="image1.jpg" alt="" /></a></li>
-  <li><a href="image2.jpg"><img src="image2.jpg" alt="" /></a></li>
-  <li ><a href="image3.jpg"><img src="image3.jpg" alt="" /></a></li>
-  <li class="tall"><a href="image4.jpg"><img src="image4.jpg" alt="" /></a></li>
-  <li class="tall"><a href="image5.jpg"><img src="image5.jpg" alt="" /></a></li>
+  <li><a href="image1.jpg"><img src="image1.jpg" alt="image1.jpg" /></a></li>
+  <li><a href="image2.jpg"><img src="image2.jpg" alt="image2.jpg" /></a></li>
+  <li ><a href="image3.jpg"><img src="image3.jpg" alt="image3.jpg" /></a></li>
+  <li class="tall"><a href="image4.jpg"><img src="image4.jpg" alt="image4.jpg" /></a></li>
+  <li class="tall"><a href="image5.jpg"><img src="image5.jpg" alt="image5.jpg" /></a></li>
 </ul>
 <p>Lorem ipsum dolor ...</p>
 </body>
